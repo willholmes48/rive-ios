@@ -7,9 +7,8 @@
 //
 
 import Foundation
-import Combine
 
-open class RiveModel: ObservableObject {
+open class RiveModel {
     // NOTE: the order here determines the order in which memory garbage collected
     public internal(set) var stateMachine: RiveStateMachineInstance?
     public internal(set) var animation: RiveLinearAnimationInstance?

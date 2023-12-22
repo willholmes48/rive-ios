@@ -6,8 +6,7 @@
 //  Copyright © 2022 Rive. All rights reserved.
 //
 
-import SwiftUI
-import Combine
+import UIKit
 
 /// An object used for controlling a RiveView. For most common Rive files you should only need
 /// to interact with a `RiveViewModel` object.
@@ -38,7 +37,7 @@ import Combine
 ///    }
 /// }
 /// ```
-open class RiveViewModel: NSObject, ObservableObject, RiveFileDelegate, RiveStateMachineDelegate, RivePlayerDelegate {
+open class RiveViewModel: NSObject, RiveFileDelegate, RiveStateMachineDelegate, RivePlayerDelegate {
     // TODO: could be a weak ref, need to look at this in more detail. 
     open private(set) var riveView: RiveView?
     private var defaultModel: RiveModelBuffer!
@@ -415,11 +414,6 @@ open class RiveViewModel: NSObject, ObservableObject, RiveFileDelegate, RiveStat
         riveView = nil
     }
     
-    /// This can be added to the body of a SwiftUI `View`
-    open func view() -> AnyView {
-        return AnyView(RiveViewRepresentable(viewModel: self))
-    }
-    
     // MARK: - UIKit Helper
     
     /// This can be used to connect with and configure an `RiveView` that was created elsewhere.
@@ -464,78 +458,3 @@ open class RiveViewModel: NSObject, ObservableObject, RiveFileDelegate, RiveStat
         case textValueRunError(_ message: String)
     }
 }
-
-#if os(iOS)  
-    /// This makes a SwiftUI digestable view from an `RiveViewModel` and its `RiveView`
-    public struct RiveViewRepresentable: UIViewRepresentable {
-        let viewModel: RiveViewModel
-        
-        public init(viewModel: RiveViewModel) {
-            self.viewModel = viewModel
-        }
-        
-        /// Constructs the view
-        public func makeUIView(context: Context) -> RiveView {
-            return viewModel.createRiveView()
-        }
-        
-        public func updateUIView(_ view: RiveView, context: UIViewRepresentableContext<RiveViewRepresentable>) {
-            viewModel.update(view: view)
-        }
-        
-        public static func dismantleUIView(_ view: RiveView, coordinator: Coordinator) {
-            view.stop()
-            if (view == coordinator.viewModel.riveView) {
-                coordinator.viewModel.deregisterView()
-            }
-        }
-        
-        /// Constructs a coordinator for managing updating state
-        public func makeCoordinator() -> Coordinator {
-            return Coordinator(viewModel: viewModel)
-        }
-        
-        public class Coordinator: NSObject {
-            public var viewModel: RiveViewModel
-
-            init(viewModel: RiveViewModel) {
-                self.viewModel = viewModel
-            }
-        }
-    }
-#else
-    public struct RiveViewRepresentable: NSViewRepresentable {
-        let viewModel: RiveViewModel
-
-        public init(viewModel: RiveViewModel) {
-            self.viewModel = viewModel
-        }
-
-        /// Constructs the view
-        public func makeNSView(context: Context) -> RiveView {
-            return viewModel.createRiveView()
-        }
-
-        public func updateNSView(_ view: RiveView, context: NSViewRepresentableContext<RiveViewRepresentable>) {
-            viewModel.update(view: view)
-        }
-
-        public static func dismantleNSView(_ view: RiveView, coordinator: Coordinator) {
-            view.stop()
-            coordinator.viewModel.deregisterView()
-        }
-
-        /// Constructs a coordinator for managing updating state
-        public func makeCoordinator() -> Coordinator {
-            return Coordinator(viewModel: viewModel)
-        }
-
-        public class Coordinator: NSObject {
-            public var viewModel: RiveViewModel
-
-            init(viewModel: RiveViewModel) {
-                self.viewModel = viewModel
-            }
-        }
-    }
-#endif
